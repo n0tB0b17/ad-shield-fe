@@ -11,6 +11,8 @@ import ErrorMessage from '../../../components/common/ErrorMessage';
 import TenantNavBar from '../components/TenantNavBar';
 import TenantSidebar from '../components/TenantSideBar';
 import Typography from '@mui/material/Typography';
+import LoadingClientAnimation from '../../../components/loading/loading';
+import ErrorAnimation from '../../../components/loading/error';
 
 const drawerWidth = 240;
 
@@ -52,19 +54,13 @@ const TenantLayout = () => {
     if (infoStatus === 'loading') {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <Loader />
-                <Typography sx={{ ml: 2 }}>Loading Tenant Information...</Typography>
+                <LoadingClientAnimation message='Loading tenant page...' />
             </Box>
         );
     }
 
-    // Handle Error State
     if (infoStatus === 'failed') {
-        return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 3 }}>
-                <ErrorMessage message={`Error loading tenant: ${infoError || 'Tenant not found or inaccessible.'}`} />
-            </Box>
-        );
+        return <ErrorAnimation message={`Error loading tenant: ${infoError || 'Tenant not found or inaccessible.'}`} />
     }
 
 

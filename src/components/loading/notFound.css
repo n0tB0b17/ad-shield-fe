@@ -1,0 +1,184 @@
+/* NotFoundAnimation.css - Fixed Overlap Issue */
+.not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 24px;
+  }
+  
+  .not-found-animation {
+    position: relative;
+    width: 140px;
+    height: 140px; /* Increased height to provide more space */
+    margin-bottom: 24px; /* Increased margin to prevent overlap with text */
+  }
+  
+  .search-icon {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    z-index: 2;
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  .magnifying-glass {
+    position: relative;
+  }
+  
+  .glass {
+    width: 25px;
+    height: 25px;
+    border: 4px solid #555;
+    border-radius: 50%;
+  }
+  
+  .handle {
+    position: absolute;
+    width: 4px;
+    height: 15px;
+    background-color: #555;
+    bottom: -8px;
+    right: -2px;
+    transform: rotate(-45deg);
+  }
+  
+  .folder-empty {
+    position: absolute;
+    bottom: 30px; /* Moved up to prevent overlap with text */
+    right: 20px;
+    z-index: 1;
+  }
+  
+  .folder-tab {
+    position: absolute;
+    width: 25px;
+    height: 10px;
+    background-color: #ffca28;
+    border: 2px solid #000;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    top: -10px;
+    left: 5px;
+  }
+  
+  .folder-body {
+    position: absolute;
+    width: 60px;
+    height: 45px;
+    background-color: #ffca28;
+    border: 2px solid #000;
+    border-radius: 3px;
+  }
+  
+  .question-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Press Start 2P', system-ui;
+    font-size: 24px;
+    color: #333;
+    animation: blink 1s infinite;
+  }
+  
+  .pixel-dust {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .dust {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background-color: #ffca28;
+    border-radius: 1px;
+  }
+  
+  .d1 {
+    top: 30%;
+    left: 45%;
+    animation: float 3s infinite;
+  }
+  
+  .d2 {
+    top: 35%;
+    left: 55%;
+    animation: float 3s infinite 0.2s;
+  }
+  
+  .d3 {
+    top: 45%;
+    left: 48%;
+    animation: float 3s infinite 0.4s;
+  }
+  
+  .d4 {
+    top: 50%;
+    left: 52%;
+    animation: float 3s infinite 0.6s;
+  }
+  
+  .d5 {
+    top: 55%;
+    left: 45%;
+    animation: float 3s infinite 0.8s;
+  }
+  
+  .d6 {
+    top: 60%;
+    left: 55%;
+    animation: float 3s infinite 1s;
+  }
+  
+  .d7 {
+    top: 65%;
+    left: 48%;
+    animation: float 3s infinite 1.2s;
+  }
+  
+  .d8 {
+    top: 70%;
+    left: 52%;
+    animation: float 3s infinite 1.4s;
+  }
+  
+  @keyframes floating {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  
+  @keyframes float {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-20px) translateX(5px);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes blink {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+  
+  .not-found-text {
+    font-family: 'Press Start 2P', system-ui, sans-serif;
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px; 
+    text-shadow: 1px 1px 0 #eee;
+    text-align: center;
+    position: relative; 
+    z-index: 5; 
+  }

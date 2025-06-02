@@ -11,14 +11,11 @@ const NavBar = () => {
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
                 <Toolbar>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        Company logo here
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }} to="/clients">
+                        Logo
                     </Typography>
                     <Button color="inherit" component={RouterLink} to="/clients">
-                        Add Roles
-                    </Button>
-                    <Button color="inherit" component={RouterLink} to="/clients/add">
-                        Add Client
+                        Dashboard
                     </Button>
                 </Toolbar>
             </AppBar>

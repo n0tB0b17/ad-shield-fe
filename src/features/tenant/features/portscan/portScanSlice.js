@@ -3,7 +3,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
     fetchPortScanHistoryAPI,
     fetchPortScanByIdAPI,
-    startPortScanAPI
+    startPortScanAPI,
+    deletePortScanAPI
 } from '../../tenantAPI'; // Adjust path as needed
 
 
@@ -13,7 +14,6 @@ export const fetchPortScanHistory = createAsyncThunk(
     async (clientId, { rejectWithValue }) => {
         try {
             const data = await fetchPortScanHistoryAPI(clientId);
-            // Assuming 'docs' contains the array of scans
             return data.docs || [];
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch scan history');
@@ -26,7 +26,6 @@ export const fetchPortScanById = createAsyncThunk(
     async ({ clientId, scanId }, { rejectWithValue }) => {
         try {
             const data = await fetchPortScanByIdAPI(clientId, scanId);
-            // Assuming 'docs' contains the single scan object
             return data.docs || null;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message || `Failed to fetch scan ${scanId}`);
@@ -34,18 +33,29 @@ export const fetchPortScanById = createAsyncThunk(
     }
 );
 
+
+export const deletePortScan = createAsyncThunk(
+    'portScan/deleteDataById',
+    async ({ clientId, scanId }, { rejectWithValue }) => {
+        try {
+            const data = await deletePortScanAPI(clientId, scanId);
+            return data
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || `Failed to delete scan ${scanId}`);
+        }
+    }
+)
+
 export const startPortScan = createAsyncThunk(
     'portScan/startScan',
     async ({ clientId, scanData }, { rejectWithValue }) => {
         try {
-            // Map frontend names to backend API expected names
             const apiPayload = {
-                address: scanData.ipAddress, // Match backend 'address'
-                port_range: scanData.portRange, // Match backend 'port_range'
+                address: scanData.ipAddress,
+                port_range: scanData.portRange,
             };
             const response = await startPortScanAPI(clientId, apiPayload);
-            // Return the newly created scan details if needed, or just success
-            return response.docs || { success: true }; // Assuming backend returns the new scan in 'docs'
+            return response.docs || { success: true };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message || 'Failed to start scan');
         }
@@ -56,12 +66,15 @@ export const startPortScan = createAsyncThunk(
 const initialState = {
     history: [],
     selectedScan: null,
-    historyStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    historyStatus: 'idle',
     historyError: null,
     detailStatus: 'idle',
     detailError: null,
-    scanStatus: 'idle', // Status for starting a new scan
+    scanStatus: 'idle', 
     scanError: null,
+    deleteStatus: 'idle',
+    deleteError: null,
+    deletingId: null,
 };
 
 const portScanSlice = createSlice({
@@ -76,18 +89,21 @@ const portScanSlice = createSlice({
         resetScanStatus: (state) => {
             state.scanStatus = 'idle';
             state.scanError = null;
+        },
+        resetDeleteStatus: (state) => {
+            state.deleteStatus = "idle";
+            state.deleteError = null;
+            state.deletingId = null;
         }
     },
     extraReducers: (builder) => {
         builder
-            // Fetch History
             .addCase(fetchPortScanHistory.pending, (state) => {
                 state.historyStatus = 'loading';
                 state.historyError = null;
             })
             .addCase(fetchPortScanHistory.fulfilled, (state, action) => {
                 state.historyStatus = 'succeeded';
-                // Map snake_case from API if necessary (example shown)
                 state.history = action.payload.map(scan => ({
                     id: scan._id, // Use _id as id
                     userId: scan.user_id,
@@ -152,15 +168,38 @@ const portScanSlice = createSlice({
             })
             .addCase(startPortScan.fulfilled, (state, action) => {
                 state.scanStatus = 'succeeded';
-                // Optionally add the new scan to history here if the API returns it
-                // Or rely on refetching the history list
+
             })
             .addCase(startPortScan.rejected, (state, action) => {
                 state.scanStatus = 'failed';
                 state.scanError = action.payload;
+            }).addCase(deletePortScan.pending, (state, action) => {
+                state.deletingId = action.meta.arg.scanId;
+                state.deleteStatus = 'loading';
+                state.deleteError = null;
+            })
+            .addCase(deletePortScan.fulfilled, (state, action) => {
+                const deletedScanId = action.payload;
+                state.history = state.history.filter(scan => scan.id !== deletedScanId);
+                state.deletingId = null;
+                state.deleteStatus = 'succeeded';
+                state.deleteError = null;
+
+                if (state.selectedScan?.id === deletedScanId) {
+                    state.selectedScan = null;
+                    state.detailStatus = 'idle';
+                    state.detailError = null;
+
+                }
+            })
+            .addCase(deletePortScan.rejected, (state, action) => {
+                state.historyError = `Deletion failed: ${action.payload}`; // Or use a dedicated deleteError state
+                state.deletingId = null;
+                state.deleteStatus = 'failed';
+                state.deleteError = action.payload;
             });
     },
 });
 
-export const { clearSelectedScan, resetScanStatus } = portScanSlice.actions;
+export const { clearSelectedScan, resetScanStatus, resetDeleteStatus } = portScanSlice.actions;
 export default portScanSlice.reducer;

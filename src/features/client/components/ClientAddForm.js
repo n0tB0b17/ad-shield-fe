@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { addClient, resetAddClientStatus } from '../clientSlice';
+import { addClient, resetAddClientStatus, fetchClients, fetchClientStats } from '../clientSlice';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -50,25 +50,27 @@ const ClientAddForm = () => {
     const [activeStep, setActiveStep] = useState(0);
     const steps = ['Organization Details', 'Admin Information', 'Branding'];
 
-    // Reset status when component unmounts or on successful submission
     useEffect(() => {
         return () => {
-            dispatch(resetAddClientStatus());
+            setTimeout(() => {
+                dispatch(resetAddClientStatus());
+            }, 1000)
         };
     }, [dispatch]);
 
-    // Handle successful submission
     useEffect(() => {
         if (addClientStatus === 'succeeded') {
-            navigate('/clients'); // Redirect to client list
-            // Optionally show a success message before redirecting
+            dispatch(fetchClients());
+            dispatch(fetchClientStats());
+            setTimeout(() => {
+                navigate('/clients');
+            }, 100)
         }
-    }, [addClientStatus, navigate]);
+    }, [addClientStatus, fetchClients, fetchClientStats, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
-        // Basic validation clear on change
         if (formErrors[name]) {
             setFormErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -94,7 +96,7 @@ const ClientAddForm = () => {
         }
 
         setFormErrors(errors);
-        return Object.keys(errors).length === 0; // Returns true if no errors
+        return Object.keys(errors).length === 0; 
     };
 
     const validateForm = () => {
@@ -139,7 +141,6 @@ const ClientAddForm = () => {
 
     const getBackgroundColor = (step) => {
         if (step === 2) {
-            // For the branding step, show a gradient of the selected colors
             return `linear-gradient(135deg, ${alpha(formData.primaryColorHex, 0.1)} 0%, ${alpha(formData.secondaryColorHex, 0.1)} 100%)`;
         }
         return '#fff';
@@ -544,13 +545,6 @@ const ClientAddForm = () => {
             }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Button
-                    startIcon={<ArrowBackIcon />}
-                    onClick={handleCancel}
-                    sx={{ mr: 2 }}
-                >
-                    Back to clients
-                </Button>
                 <Typography variant="h5" sx={{ fontWeight: 'bold', flexGrow: 1 }}>
                     Register New Client/Tenant
                 </Typography>

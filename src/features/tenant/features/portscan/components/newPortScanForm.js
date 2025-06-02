@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { startPortScan, resetScanStatus } from '../portScanSlice';
+import { startPortScan, resetScanStatus, fetchPortScanHistory } from '../portScanSlice';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import ErrorAnimation from '../../../../../components/loading/error'
 
 const NewPortScanForm = () => {
     const { clientId } = useParams();
@@ -15,41 +16,36 @@ const NewPortScanForm = () => {
     const { scanStatus, scanError } = useSelector((state) => state.portScan);
 
     const [ipAddress, setIpAddress] = useState('');
-    const [portRange, setPortRange] = useState(''); // e.g., "1-1000", "22,80,443", "1-100,443"
+    const [portRange, setPortRange] = useState('');
     const [formErrors, setFormErrors] = useState({});
 
-    // Reset status when component mounts or clientId changes
+
     useEffect(() => {
         dispatch(resetScanStatus());
     }, [dispatch, clientId]);
 
-
-    // Redirect to history page after successful scan submission
     useEffect(() => {
-        if (scanStatus === 'succeeded') {
-            navigate(`/tenant/${clientId}/port-scan/history`);
-            // Optionally show a success notification before redirecting
-        }
-    }, [scanStatus, navigate, clientId]);
+        setTimeout(() => {
+            if (scanStatus === 'succeeded') {
+                dispatch(fetchPortScanHistory(clientId));
+                navigate(`/tenant/${clientId}/port-scan/history`);
+            }
+        }, 100)
+    }, [scanStatus, fetchPortScanHistory, navigate, clientId]);
 
     const validateForm = () => {
         const errors = {};
-        // Basic IP Address validation (more robust regex could be used)
         if (!ipAddress.trim()) {
             errors.ipAddress = 'IP Address is required';
         } else if (!/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ipAddress.trim()) && !/^[a-zA-Z0-9.-]+$/.test(ipAddress.trim())) {
-            // Allow basic hostname characters too
             errors.ipAddress = 'Invalid IP Address or Hostname format';
         }
 
-        // Basic Port Range validation
         if (!portRange.trim()) {
             errors.portRange = 'Port Range is required';
         } else if (!/^[\d,-]+$/.test(portRange.replace(/\s/g, ''))) {
-            // Allows digits, commas, hyphens
             errors.portRange = 'Invalid characters in Port Range (use numbers, commas, hyphens)';
         }
-        // Add more specific port range format validation if needed
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -70,7 +66,7 @@ const NewPortScanForm = () => {
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             {scanStatus === 'failed' && scanError && (
-                <Alert severity="error" sx={{ mb: 2 }}>{scanError}</Alert>
+                <ErrorAnimation message={scanError} />
             )}
             <TextField
                 margin="normal"

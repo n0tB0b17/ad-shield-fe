@@ -1,0 +1,173 @@
+/* ErrorAnimation.css */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.error-animation {
+  position: relative;
+  width: 140px;
+  height: 120px;
+  margin-bottom: 16px;
+}
+
+.computer {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.computer-screen {
+  width: 60px;
+  height: 50px;
+  background-color: #444;
+  border: 3px solid #222;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.computer-base {
+  width: 80px;
+  height: 10px;
+  background-color: #666;
+  border: 3px solid #222;
+  border-radius: 2px;
+  position: relative;
+  left: -10px;
+  margin-top: 3px;
+}
+
+.error-icon {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 1s infinite alternate;
+  background-color: #ff4444;
+  border-radius: 50%;
+}
+
+.error-x {
+  position: absolute;
+  width: 16px;
+  height: 4px;
+  background-color: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.error-x.left {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.error-x.right {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.error-cloud {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  z-index: 2;
+}
+
+.cloud-body {
+  width: 40px;
+  height: 25px;
+  background-color: #666;
+  border: 2px solid #333;
+  border-radius: 10px;
+  position: relative;
+}
+
+.cloud-body:before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #666;
+  border: 2px solid #333;
+  border-radius: 50%;
+  top: -10px;
+  left: 5px;
+  z-index: -1;
+}
+
+.cloud-body:after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: #666;
+  border: 2px solid #333;
+  border-radius: 50%;
+  top: -7px;
+  right: 7px;
+  z-index: -1;
+}
+
+.lightning {
+  position: absolute;
+  background-color: #ffdd00;
+  border: 1px solid #cc9900;
+  z-index: 3;
+}
+
+.bolt1 {
+  width: 5px;
+  height: 15px;
+  bottom: -15px;
+  left: 10px;
+  clip-path: polygon(50% 0%, 0% 50%, 50% 50%, 0% 100%, 100% 50%, 50% 50%, 100% 0%);
+  animation: flash 1.2s infinite;
+}
+
+.bolt2 {
+  width: 5px;
+  height: 15px;
+  bottom: -15px;
+  right: 10px;
+  clip-path: polygon(50% 0%, 0% 50%, 50% 50%, 0% 100%, 100% 50%, 50% 50%, 100% 0%);
+  animation: flash 1.2s infinite 0.5s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes flash {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.error-text {
+  font-family: 'Press Start 2P', system-ui, sans-serif;
+  font-size: 14px;
+  color: #ff4444;
+  margin-top: 10px;
+  text-shadow: 1px 1px 0 #222;
+  text-align: center;
+}

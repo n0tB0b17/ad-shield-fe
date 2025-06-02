@@ -2,16 +2,18 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPortScanById, clearSelectedScan } from '../portScanSlice';
+import PortScanDetailCharts from '../components/portScanDetailChart';
 import PortScanDetailDisplay from '../components/portScanDetail';
-import Loader from '../../../../../components/common/Loader';
-import ErrorMessage from '../../../../../components/common/ErrorMessage';
+import Loader from '../../../../../components/loading/loading';
+import ErrorMessage from '../../../../../components/loading/error';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Box from '@mui/material/Box';
+import { Divider } from '@mui/material';
 
 const PortScanDetailPage = () => {
-    const { clientId, scanId } = useParams(); // Get both params
+    const { clientId, scanId } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {
@@ -24,17 +26,18 @@ const PortScanDetailPage = () => {
         if (clientId && scanId) {
             dispatch(fetchPortScanById({ clientId, scanId }));
         }
-        // Cleanup on unmount
         return () => {
             dispatch(clearSelectedScan());
         };
     }, [clientId, scanId, dispatch]);
 
     let content;
+    let detailChart;
 
     if (detailStatus === 'loading') {
-        content = <Loader />;
+        content = <Loader message='loading...' />;
     } else if (detailStatus === 'succeeded' && selectedScan) {
+        detailChart = <PortScanDetailCharts scanDetail={selectedScan} />
         content = <PortScanDetailDisplay scanDetail={selectedScan} />;
     } else if (detailStatus === 'failed') {
         content = <ErrorMessage message={detailError || 'Could not load scan details.'} />;
@@ -57,6 +60,8 @@ const PortScanDetailPage = () => {
                     Scan Details
                 </Typography>
             </Box>
+            {detailChart}
+            <Divider sx={{ my: 3 }} />
             {content}
         </Box>
     );

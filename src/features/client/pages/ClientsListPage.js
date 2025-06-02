@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchClients } from '../clientSlice';
+import { fetchClients, fetchClientStats } from '../clientSlice';
 import ClientListTable from '../components/ClientListTable';
-import Loader from '../../../components/common/Loader';
-import ErrorMessage from '../../../components/common/ErrorMessage';
+import LoadingAnimation from '../../../components/loading/loading'
+import ErrorAnimation from '../../../components/loading/error'
+import NotFoundAnimation from '../../../components/loading/notFound';
+import ClientStatsOverview from '../components/ClientStatsOverview';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
@@ -13,30 +15,33 @@ import { Link as RouterLink } from 'react-router-dom';
 const ClientsListPage = () => {
     const dispatch = useDispatch();
     const { items: clients, status, error } = useSelector((state) => state.clients);
+    const { clientStatsStatus } = useSelector((state) => state.clients);
 
     useEffect(() => {
-        // Fetch clients only if they haven't been fetched successfully yet
         if (status === 'idle') {
             dispatch(fetchClients());
         }
-    }, [status, dispatch]);
+
+        if (clientStatsStatus === 'idle') {
+            dispatch(fetchClientStats());
+        }
+    }, [status, clientStatsStatus, dispatch]);
 
     let content;
-
     if (status === 'loading') {
-        content = <Loader />;
+        content = <LoadingAnimation />;
     } else if (status === 'succeeded') {
         content = <ClientListTable clients={clients} />;
+    } else if (clients.length === 0) {
+        content = <NotFoundAnimation message='client not found' />
     } else if (status === 'failed') {
-        content = <ErrorMessage message={error} />;
+        content = <ErrorAnimation message={error} />;
     }
 
     return (
         <div>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1">
-                    Add clients
-                </Typography>
+            <ClientStatsOverview />
+            <Box sx={{ display: 'flex', justifyContent: 'right', alignItems: 'center', mb: 2 }}>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}

@@ -10,9 +10,14 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 const ClientListTable = ({ clients }) => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const handleRowClick = (clientId) => {
         navigate(`/clients/${clientId}`);
@@ -23,15 +28,24 @@ const ClientListTable = ({ clients }) => {
     }
 
     return (
-        <TableContainer component={Paper} sx={{ mt: 3 }}>
-            <Table sx={{ minWidth: 650 }} aria-label="client list table">
+        <TableContainer 
+            component={Paper} 
+            sx={{ 
+                mt: 3,
+                overflowX: 'auto',
+                '& .MuiTable-root': {
+                    minWidth: { xs: '100%', sm: 650 }
+                }
+            }}
+        >
+            <Table aria-label="client list table">
                 <TableHead sx={{ backgroundColor: 'grey.200' }}>
                     <TableRow>
                         <TableCell>Client Name</TableCell>
-                        <TableCell>Organization Type</TableCell>
+                        {!isMobile && <TableCell>Organization Type</TableCell>}
                         <TableCell>Admin Email</TableCell>
-                        <TableCell>Headquarter</TableCell>
-                        <TableCell align="center">Primary Color</TableCell>
+                        {!isTablet && <TableCell>Headquarter</TableCell>}
+                        {!isMobile && <TableCell align="center">Primary Color</TableCell>}
                         <TableCell>Created At</TableCell>
                     </TableRow>
                 </TableHead>
@@ -41,26 +55,49 @@ const ClientListTable = ({ clients }) => {
                             key={client.id}
                             hover
                             onClick={() => handleRowClick(client.id)}
-                            sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}
+                            sx={{ 
+                                cursor: 'pointer',
+                                '&:last-child td, &:last-child th': { border: 0 },
+                                '& td': {
+                                    maxWidth: {
+                                        xs: '120px',
+                                        sm: '200px',
+                                        md: 'unset'
+                                    },
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                }
+                            }}
                         >
-                            <TableCell component="th" scope="row">
+                            <TableCell 
+                                component="th" 
+                                scope="row"
+                                sx={{
+                                    fontWeight: 'medium',
+                                    minWidth: { xs: '120px', sm: 'unset' }
+                                }}
+                            >
                                 {client.clientName}
                             </TableCell>
-                            <TableCell>{client.organizationType}</TableCell>
+                            {!isMobile && <TableCell>{client.organizationType}</TableCell>}
                             <TableCell>{client.adminEmail}</TableCell>
-                            <TableCell>{client.headQuarter}</TableCell>
-                            <TableCell align="center">
-                                <Chip
-                                    label={client.primaryColor}
-                                    size="small"
-                                    sx={{
-                                        backgroundColor: client.primaryColor,
-                                        color: '#fff', // Simple contrast logic, might need adjustment
-                                        fontWeight: 'bold',
-                                        border: '1px solid rgba(0,0,0,0.1)'
-                                    }}
-                                />
-                            </TableCell>
+                            {!isTablet && <TableCell>{client.headQuarter}</TableCell>}
+                            {!isMobile && (
+                                <TableCell align="center">
+                                    <Chip
+                                        label={client.primaryColor}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: client.primaryColor,
+                                            color: '#fff',
+                                            fontWeight: 'bold',
+                                            border: '1px solid rgba(0,0,0,0.1)',
+                                            maxWidth: '100%'
+                                        }}
+                                    />
+                                </TableCell>
+                            )}
                             <TableCell>{new Date(client.createdAt).toLocaleDateString()}</TableCell>
                         </TableRow>
                     ))}

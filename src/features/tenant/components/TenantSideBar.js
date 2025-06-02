@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink as RouterNavLink, useLocation, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -10,16 +11,14 @@ import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
 import Toolbar from '@mui/material/Toolbar';
-
+import SettingsRemoteIcon from '@mui/icons-material/SettingsRemote';
 // Import Icons
-import InboxIcon from '@mui/icons-material/MoveToInbox';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import HistoryIcon from '@mui/icons-material/History';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import LanIcon from '@mui/icons-material/Lan';
 import FindInPageIcon from '@mui/icons-material/FindInPage';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import Reports from '@mui/icons-material/Report'
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import PeopleIcon from '@mui/icons-material/People';
@@ -187,6 +186,11 @@ const CollapsibleNavItem = ({ icon, primary, children, initiallyOpen = false, de
 const TenantSidebar = ({ primaryColor = '#2196f3', secondaryColor = '#9c27b0' }) => {
     const { clientId } = useParams();
 
+    const { isConnected: isAdConnected } = useSelector((state) => state.ad); // Get AD connection status
+    const location = useLocation();
+
+    // Determine if the AD section or its children are active
+    const isAdSectionActive = location.pathname.startsWith(`/tenant/${clientId}/ad/`);
     return (
         <Drawer
             variant="permanent"
@@ -221,27 +225,15 @@ const TenantSidebar = ({ primaryColor = '#2196f3', secondaryColor = '#9c27b0' })
                 },
             }}>
                 <List>
-                    <CollapsibleNavItem
-                        icon={<LanIcon />}
-                        primary="Port Scanning"
+
+                    <NavItem
+                        to={`/tenant/${clientId}/port-scan/history`}
+                        icon={<LanIcon fontSize="small" />}
+                        primary="Port Scanner"
                         primaryColor={primaryColor}
                         secondaryColor={secondaryColor}
-                    >
-                        <NavItem
-                            to={`/tenant/${clientId}/port-scan/history`}
-                            icon={<HistoryIcon fontSize="small" />}
-                            primary="Scan History"
-                            primaryColor={primaryColor}
-                            secondaryColor={secondaryColor}
-                        />
-                        <NavItem
-                            to={`/tenant/${clientId}/port-scan/new`}
-                            icon={<AddCircleOutlineIcon fontSize="small" />}
-                            primary="New Scan"
-                            primaryColor={primaryColor}
-                            secondaryColor={secondaryColor}
-                        />
-                    </CollapsibleNavItem>
+                    />
+
 
                     <Divider sx={{
                         my: 1.5,
@@ -250,27 +242,13 @@ const TenantSidebar = ({ primaryColor = '#2196f3', secondaryColor = '#9c27b0' })
                         mx: 'auto',
                     }} />
 
-                    <CollapsibleNavItem
-                        icon={<FindInPageIcon />}
-                        primary="Pcap Scanning"
+                    <NavItem
+                        to={`/tenant/${clientId}/pcap/history`}
+                        icon={<FindInPageIcon fontSize="small" />}
+                        primary="Packet Scanner"
                         primaryColor={primaryColor}
                         secondaryColor={secondaryColor}
-                    >
-                        <NavItem
-                            to={`/tenant/${clientId}/pcap/history`}
-                            icon={<HistoryIcon fontSize="small" />}
-                            primary="Pcap History"
-                            primaryColor={primaryColor}
-                            secondaryColor={secondaryColor}
-                        />
-                        <NavItem
-                            to={`/tenant/${clientId}/pcap/upload`}
-                            icon={<AddCircleOutlineIcon fontSize="small" />}
-                            primary="Upload Pcap"
-                            primaryColor={primaryColor}
-                            secondaryColor={secondaryColor}
-                        />
-                    </CollapsibleNavItem>
+                    />
 
                     <Divider sx={{
                         my: 1.5,
@@ -294,42 +272,70 @@ const TenantSidebar = ({ primaryColor = '#2196f3', secondaryColor = '#9c27b0' })
                         mx: 'auto',
                     }} />
 
+                    <NavItem
+                        to={`/tenant/${clientId}/reports`}
+                        icon={<Reports />}
+                        primary="Reports"
+                        primaryColor={primaryColor}
+                        secondaryColor={secondaryColor}
+                    />
+
+                    <Divider sx={{
+                        my: 1.5,
+                        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                        width: '90%',
+                        mx: 'auto',
+                    }} />
+
+                    <NavItem
+                        to={`/tenant/${clientId}/users`}
+                        icon={<PeopleIcon />}
+                        primary="Users"
+                        primaryColor={primaryColor}
+                        secondaryColor={secondaryColor}
+                    />
+
+                    <Divider sx={{
+                        my: 1.5,
+                        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                        width: '90%',
+                        mx: 'auto',
+                    }} />
+
+
                     <CollapsibleNavItem
                         icon={<GroupWorkIcon />}
                         primary="Active Directory"
-                        primaryColor={primaryColor}
-                        secondaryColor={secondaryColor}
+                        initiallyOpen={isAdSectionActive} // Keep open if in AD section
                     >
+                        <NavItem
+                            to={`/tenant/${clientId}/ad/connections`}
+                            icon={<SettingsRemoteIcon fontSize="small" />}
+                            primary="Connections"
+                        />
+
                         <NavItem
                             to={`/tenant/${clientId}/ad/connect`}
                             icon={<VpnKeyIcon fontSize="small" />}
                             primary="Connect AD"
-                            primaryColor={primaryColor}
-                            secondaryColor={secondaryColor}
                         />
-
-                        {false && (
+                        {/* --- Conditionally Rendered AD Management Links --- */}
+                        {isAdConnected && (
                             <>
                                 <NavItem
-                                    to={`/tenant/${clientId}/ad/roles`}
-                                    icon={<ViewListIcon fontSize="small" />}
-                                    primary="Roles"
-                                    primaryColor={primaryColor}
-                                    secondaryColor={secondaryColor}
+                                    to={`/tenant/${clientId}/ad/manage/groups`}
+                                    icon={<ViewListIcon fontSize="small" />} // Icon for Groups
+                                    primary="Groups"
                                 />
                                 <NavItem
-                                    to={`/tenant/${clientId}/ad/users`}
+                                    to={`/tenant/${clientId}/ad/manage/users`} // Placeholder path
                                     icon={<PeopleIcon fontSize="small" />}
                                     primary="Users"
-                                    primaryColor={primaryColor}
-                                    secondaryColor={secondaryColor}
                                 />
                                 <NavItem
-                                    to={`/tenant/${clientId}/ad/ou`}
+                                    to={`/tenant/${clientId}/ad/manage/ou`} // Placeholder path
                                     icon={<AccountTreeIcon fontSize="small" />}
                                     primary="Organizational Units"
-                                    primaryColor={primaryColor}
-                                    secondaryColor={secondaryColor}
                                 />
                             </>
                         )}

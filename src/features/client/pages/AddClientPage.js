@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 const AddClientPage = () => {
     const navigate = useNavigate();
+
     return (
         <div>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

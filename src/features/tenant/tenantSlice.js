@@ -1,5 +1,66 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { fetchTenantInfoByIdAPI, loginTenantUserAPI } from './tenantAPI';
+import { fetchTenantInfoByIdAPI, loginTenantUserAPI, fetchCurrentUserContextAPI } from './tenantAPI';
+
+const getInitialAuthState = () => {
+    try {
+        const token = localStorage.getItem('authToken');
+        const user = JSON.parse(localStorage.getItem('tenantUser'));
+        const expireAt = localStorage.getItem('tokenExpireAt');
+
+        if (token && user && expireAt) {
+            const expireTime = new Date(expireAt).getTime();
+            const currentTime = new Date().getTime();
+
+            if (expireTime > currentTime) {
+                return {
+                    isAuthenticated: true,
+                    authToken: token,
+                    currentUser: user,
+                    tokenExpireAt: expireAt,
+                    authStatus: 'succeeded'
+                };
+            }
+        }
+    } catch (error) {
+        console.error('Error restoring auth state:', error);
+    }
+
+    return {
+        isAuthenticated: false,
+        authToken: null,
+        currentUser: null,
+        tokenExpireAt: null,
+        authStatus: 'idle'
+    };
+};
+
+const mapUserContextData = (user) => {
+    if (!user) return null;
+    return {
+        id: user.id,
+        userName: user.user_name,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        contactNumber: user.contact_number,
+        roleId: user.role_id, // Keep roleId for reference if needed
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+    };
+};
+
+const mapRoleData = (role) => {
+    if (!role) return null;
+    return {
+        id: role._id,
+        name: role.name,
+        description: role.description,
+        permissions: role.permissions || [],
+        createdAt: role.created_at,
+        updatedAt: role.updated_at,
+    };
+};
+
 
 
 export const fetchTenantInfoById = createAsyncThunk(
@@ -21,7 +82,7 @@ export const fetchTenantInfoById = createAsyncThunk(
 
 export const loginTenantUser = createAsyncThunk(
     'tenant/loginUser',
-    async ({ clientId, credentials }, { rejectWithValue }) => {
+    async ({ clientId, credentials }, { dispatch, rejectWithValue }) => {
         try {
 
             const apiCredentials = {
@@ -29,7 +90,24 @@ export const loginTenantUser = createAsyncThunk(
                 password: credentials.password
             };
             const data = await loginTenantUserAPI(clientId, apiCredentials);
+            if (data.token && clientId) {
+                dispatch(fetchCurrentUserContext(clientId))
+            }
+
             const user = data.user;
+
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('tenantUser', JSON.stringify({
+                id: user.id,
+                userName: user.user_name,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                email: user.email,
+                roleId: user.role_id,
+            }));
+            localStorage.setItem('tokenExpireAt', data.expireAt);
+
+
             return {
                 token: data.token,
                 user: {
@@ -48,19 +126,42 @@ export const loginTenantUser = createAsyncThunk(
     }
 );
 
+export const fetchCurrentUserContext = createAsyncThunk(
+    'tenant/fetchContext',
+    async (clientId, { rejectWithValue, getState }) => {
+        // const { currentUser } = getState().tenant;
+        // if (currentUser?.firstName) { // Check if detailed data is already present
+        //    return currentUser;
+        // }
+        try {   
+            const contextData = await fetchCurrentUserContextAPI(clientId);
+            return {
+                user: mapUserContextData(contextData.user),
+                role: mapRoleData(contextData.role),
+            };
+        } catch (error) {
+            return rejectWithValue(error.message || 'Failed to fetch user context');
+        }
+    }
+);
+
+
+const authInitialState = getInitialAuthState();
+
 const initialState = {
     currentTenantInfo: null,
-    infoStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    infoStatus: 'idle',
     infoError: null,
 
-    // Tenant Authentication
-    isAuthenticated: false,
-    authToken: null,
-    currentUser: null,
-    tokenExpireAt: null,
-    authStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    isAuthenticated: authInitialState.isAuthenticated,
+    authToken: authInitialState.authToken,
+    currentUser: authInitialState.currentUser,
+    tokenExpireAt: authInitialState.tokenExpireAt,
+    authStatus: authInitialState.authStatus,
     authError: null,
 };
+
+
 
 const tenantSlice = createSlice({
     name: 'tenant',
@@ -73,6 +174,10 @@ const tenantSlice = createSlice({
             state.tokenExpireAt = null;
             state.authStatus = 'idle';
             state.authError = null;
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('tenantUser');
+            localStorage.removeItem('tokenExpireAt');
         },
         clearTenantInfo: (state) => {
             state.currentTenantInfo = null;
@@ -82,7 +187,25 @@ const tenantSlice = createSlice({
         resetTenantAuthStatus: (state) => {
             state.authStatus = 'idle';
             state.authError = null;
-        }
+        },
+        checkTokenExpiration: (state) => {
+            if (state.tokenExpireAt) {
+                const expireTime = new Date(state.tokenExpireAt).getTime();
+                const currentTime = new Date().getTime();
+
+                if (currentTime > expireTime) {
+                    state.isAuthenticated = false;
+                    state.authToken = null;
+                    state.currentUser = null;
+                    state.tokenExpireAt = null;
+                    state.authStatus = 'idle';
+
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('tenantUser');
+                    localStorage.removeItem('tokenExpireAt');
+                }
+            }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -113,9 +236,6 @@ const tenantSlice = createSlice({
                 state.currentUser = action.payload.user;
                 state.tokenExpireAt = action.payload.expireAt;
                 state.authError = null;
-                // Optionally store token in localStorage for persistence
-                // localStorage.setItem('tenantAuthToken', action.payload.token);
-                // localStorage.setItem('tenantUser', JSON.stringify(action.payload.user));
             })
             .addCase(loginTenantUser.rejected, (state, action) => {
                 state.authStatus = 'failed';
@@ -124,12 +244,29 @@ const tenantSlice = createSlice({
                 state.currentUser = null;
                 state.tokenExpireAt = null;
                 state.authError = action.payload;
-                // localStorage.removeItem('tenantAuthToken');
-                // localStorage.removeItem('tenantUser');
+
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('tenantUser');
+                localStorage.removeItem('tokenExpireAt');
+            }).addCase(fetchCurrentUserContext.pending, (state) => {
+                if (state.authStatus !== 'loading') {
+                    state.authStatus = 'loading';
+                }
+                state.authError = null;
+            })
+            .addCase(fetchCurrentUserContext.fulfilled, (state, action) => {
+                state.authStatus = 'succeeded';
+                state.currentUser = { ...state.currentUser, ...action.payload.user };
+                state.currentUserRole = action.payload.role;
+                state.authError = null;
+            })
+            .addCase(fetchCurrentUserContext.rejected, (state, action) => {
+                state.authStatus = 'failed';
+                state.authError = action.payload;
             });
     },
 });
 
-export const { logoutTenantUser, clearTenantInfo, resetTenantAuthStatus } = tenantSlice.actions;
+export const { logoutTenantUser, clearTenantInfo, resetTenantAuthStatus, checkTokenExpiration } = tenantSlice.actions;
 
 export default tenantSlice.reducer;

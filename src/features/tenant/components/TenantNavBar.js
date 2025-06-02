@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
@@ -12,15 +12,13 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import { alpha } from '@mui/material/styles';
-
-// Icons
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
-
-import { logoutTenantUser } from '../tenantSlice';
+import SettingsModal from './SettingsModal';
+import { logoutTenantUser, fetchCurrentUserContext } from '../tenantSlice';
 
 const drawerWidth = 240;
 
@@ -28,13 +26,19 @@ const TenantNavBar = ({ tenantInfo }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { clientId } = useParams();
-    const { isAuthenticated } = useSelector(state => state.tenants);
+    const { isAuthenticated, currentUser, authStatus, currentUserRole } = useSelector(state => state.tenants);
 
     // For user menu
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
-    // Extract colors or use defaults
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    useEffect(() => {
+        if (isAuthenticated && clientId && !currentUserRole && authStatus !== 'loading') {
+            dispatch(fetchCurrentUserContext(clientId));
+        }
+    }, [isAuthenticated, clientId, currentUser, currentUserRole, authStatus, dispatch]);
+
     const primaryColor = tenantInfo?.secondaryColor || '#2196f3';
     const secondaryColor = tenantInfo?.primaryColor || '#9c27b0';
 
@@ -42,9 +46,23 @@ const TenantNavBar = ({ tenantInfo }) => {
         setAnchorEl(event.currentTarget);
     };
 
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+    };
+
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const handleOpenSettings = () => {
+        setSettingsOpen(true);
+        handleCloseMenu();
+    };
+
+    const handleCloseSettings = () => {
+        setSettingsOpen(false);
+    };
+
 
     const handleLogout = () => {
         handleClose();
@@ -52,101 +70,84 @@ const TenantNavBar = ({ tenantInfo }) => {
         navigate(`/tenant/${clientId}/login`);
     };
 
+    const getUserDisplayName = () => {
+        if (!currentUser) return 'Account';
+        if (currentUser.firstName) return currentUser.firstName;
+        if (currentUser.userName) return currentUser.userName;
+        return 'Account';
+    };
+
     return (
-        <AppBar
-            position="fixed"
-            elevation={3}
-            sx={{
-                width: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : '100%',
-                ml: isAuthenticated ? `${drawerWidth}px` : 0,
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-                background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                transition: (theme) => theme.transitions.create(['width', 'margin'], {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.leavingScreen,
-                }),
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
-            }}
-        >
-            <Toolbar sx={{ minHeight: 64 }}>
-                {/* Left side - Tenant Logo & Name */}
-                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                    {tenantInfo?.logoUrl ? (
-                        <Avatar
-                            src={tenantInfo.logoUrl}
-                            alt={tenantInfo?.clientName || 'Tenant'}
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                mr: 2,
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
-                                border: '2px solid rgba(255,255,255,0.8)',
-                            }}
-                        />
-                    ) : (
-                        <Avatar
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                mr: 2,
-                                bgcolor: alpha('#fff', 0.2),
-                                color: '#fff',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
-                                border: '2px solid rgba(255,255,255,0.8)',
-                            }}
-                        >
-                            {(tenantInfo?.clientName?.[0] || 'T').toUpperCase()}
-                        </Avatar>
-                    )}
-
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{
-                            fontWeight: 600,
-                            letterSpacing: '0.5px',
-                            textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                            fontSize: { xs: '1rem', sm: '1.25rem' },
-                        }}
-                    >
-                        {tenantInfo?.clientName || 'Tenant Portal'}
-                    </Typography>
-                </Box>
-
-                {/* Right side - Authentication */}
-                {isAuthenticated ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Button
-                            color="inherit"
-                            component={RouterLink}
-                            to={`/tenant/${clientId}`}
-                            startIcon={<DashboardIcon />}
-                            sx={{
-                                mx: 1,
-                                textTransform: 'none',
-                                fontWeight: 500,
-                                background: alpha('#fff', 0.1),
-                                '&:hover': {
-                                    background: alpha('#fff', 0.2),
-                                },
-                                transition: 'all 0.2s ease-in-out',
-                                borderRadius: '8px',
-                                display: { xs: 'none', sm: 'flex' }
-                            }}
-                        >
-                            Dashboard
-                        </Button>
-
-                        <Tooltip title="Account settings">
-                            <Button
-                                aria-controls={open ? 'account-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={open ? 'true' : undefined}
-                                onClick={handleMenu}
-                                color="inherit"
-                                endIcon={<ArrowDropDownIcon />}
-                                startIcon={<AccountCircleIcon />}
+        <>
+            <AppBar
+                position="fixed"
+                elevation={3}
+                sx={{
+                    width: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : '100%',
+                    ml: isAuthenticated ? `${drawerWidth}px` : 0,
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                    transition: (theme) => theme.transitions.create(['width', 'margin'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.leavingScreen,
+                    }),
+                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.12)',
+                }}
+            >
+                <Toolbar sx={{ minHeight: 64 }}>
+                    {/* Left side - Tenant Logo & Name */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                        {tenantInfo?.logoUrl ? (
+                            <Avatar
+                                src={tenantInfo.logoUrl}
+                                alt={tenantInfo?.clientName || 'Tenant'}
                                 sx={{
+                                    width: 40,
+                                    height: 40,
+                                    mr: 2,
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
+                                    border: '2px solid rgba(255,255,255,0.8)',
+                                }}
+                            />
+                        ) : (
+                            <Avatar
+                                sx={{
+                                    width: 40,
+                                    height: 40,
+                                    mr: 2,
+                                    bgcolor: alpha('#fff', 0.2),
+                                    color: '#fff',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
+                                    border: '2px solid rgba(255,255,255,0.8)',
+                                }}
+                            >
+                                {(tenantInfo?.clientName?.[0] || 'T').toUpperCase()}
+                            </Avatar>
+                        )}
+
+                        <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                                fontWeight: 600,
+                                letterSpacing: '0.5px',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                fontSize: { xs: '1rem', sm: '1.25rem' },
+                            }}
+                        >
+                            {tenantInfo?.clientName || 'Tenant Portal'}
+                        </Typography>
+                    </Box>
+
+                    {isAuthenticated ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Button
+                                color="inherit"
+                                component={RouterLink}
+                                to={`/tenant/${clientId}`}
+                                startIcon={<DashboardIcon />}
+                                sx={{
+                                    mx: 1,
                                     textTransform: 'none',
                                     fontWeight: 500,
                                     background: alpha('#fff', 0.1),
@@ -155,96 +156,106 @@ const TenantNavBar = ({ tenantInfo }) => {
                                     },
                                     transition: 'all 0.2s ease-in-out',
                                     borderRadius: '8px',
+                                    display: { xs: 'none', sm: 'flex' }
                                 }}
                             >
-                                Account
+                                Dashboard
                             </Button>
-                        </Tooltip>
 
-                        <Menu
-                            id="account-menu"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                                'aria-labelledby': 'basic-button',
-                            }}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                            PaperProps={{
-                                elevation: 3,
-                                sx: {
-                                    minWidth: 180,
-                                    mt: 1,
-                                    borderRadius: '8px',
-                                    overflow: 'visible',
-                                    '&:before': {
-                                        content: '""',
-                                        display: 'block',
-                                        position: 'absolute',
-                                        top: 0,
-                                        right: 14,
-                                        width: 10,
-                                        height: 10,
-                                        bgcolor: 'background.paper',
-                                        transform: 'translateY(-50%) rotate(45deg)',
-                                        zIndex: 0,
+                            <Tooltip title={currentUser?.userName || 'Account'}>
+                                <Button
+                                    aria-controls={open ? 'account-menu' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={open ? 'true' : undefined}
+                                    onClick={handleMenu}
+                                    color="inherit"
+                                    endIcon={<ArrowDropDownIcon />}
+                                    startIcon={<AccountCircleIcon />}
+                                    sx={{
+                                        textTransform: 'none', fontWeight: 500,
+                                        background: alpha('#fff', 0.1),
+                                        '&:hover': { background: alpha('#fff', 0.2) },
+                                        transition: 'all 0.2s ease-in-out', borderRadius: '8px',
+                                        minWidth: { xs: 'auto', sm: 'auto' },
+                                        px: { xs: 1, sm: 2 }
+                                    }}
+                                >
+                                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '150px' }}>
+                                        {getUserDisplayName()}
+                                    </Box>
+                                </Button>
+                            </Tooltip>
+
+                            <Menu
+                                id="account-menu"
+                                anchorEl={anchorEl}
+                                open={open}
+                                onClose={handleCloseMenu}
+                                // ... (keep MenuListProps, transformOrigin, anchorOrigin, PaperProps as is) ...
+                                MenuListProps={{ 'aria-labelledby': 'basic-button' }}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                PaperProps={{
+                                    elevation: 3,
+                                    sx: {
+                                        minWidth: 180, mt: 1, borderRadius: '8px', overflow: 'visible',
+                                        '&:before': {
+                                            content: '""', display: 'block', position: 'absolute',
+                                            top: 0, right: 14, width: 10, height: 10,
+                                            bgcolor: 'background.paper', transform: 'translateY(-50%) rotate(45deg)', zIndex: 0,
+                                        },
                                     },
+                                }}
+                            >
+                                <MenuItem
+                                    onClick={handleOpenSettings}
+                                    sx={{ py: 1.5, gap: 1.5, '&:hover': { bgcolor: alpha(secondaryColor, 0.1) } }}
+                                >
+                                    <SettingsIcon fontSize="small" color="action" />
+                                    <Typography variant="body2">Settings</Typography>
+                                </MenuItem>
+
+                                <MenuItem
+                                    onClick={handleLogout}
+                                    sx={{ py: 1.5, gap: 1.5, /* Adjust gap */ '&:hover': { bgcolor: alpha('#f44336', 0.1) } }}
+                                >
+                                    <LogoutIcon fontSize="small" color="error" />
+                                    <Typography variant="body2" color="error">Logout</Typography>
+                                </MenuItem>
+                            </Menu>
+                        </Box>
+                    ) : (
+                        <Button
+                            color="inherit"
+                            component={RouterLink}
+                            to={`/tenant/${clientId}/login`}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                px: 3,
+                                py: 0.75,
+                                borderRadius: '8px',
+                                background: alpha('#fff', 0.15),
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': {
+                                    background: alpha('#fff', 0.25),
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
                                 },
                             }}
                         >
-                            <MenuItem
-                                onClick={handleClose}
-                                sx={{
-                                    py: 1.5,
-                                    gap: 2,
-                                    '&:hover': { bgcolor: alpha(primaryColor, 0.1) }
-                                }}
-                            >
-                                <SettingsIcon fontSize="small" color="action" />
-                                <Typography variant="body2">Settings</Typography>
-                            </MenuItem>
-
-                            <MenuItem
-                                onClick={handleLogout}
-                                sx={{
-                                    py: 1.5,
-                                    gap: 2,
-                                    '&:hover': { bgcolor: alpha('#f44336', 0.1) }
-                                }}
-                            >
-                                <LogoutIcon fontSize="small" color="error" />
-                                <Typography variant="body2" color="error">Logout</Typography>
-                            </MenuItem>
-                        </Menu>
-                    </Box>
-                ) : (
-                    <Button
-                        color="inherit"
-                        component={RouterLink}
-                        to={`/tenant/${clientId}/login`}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            px: 3,
-                            py: 0.75,
-                            borderRadius: '8px',
-                            background: alpha('#fff', 0.15),
-                            backdropFilter: 'blur(10px)',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                                background: alpha('#fff', 0.25),
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                            },
-                        }}
-                    >
-                        Login
-                    </Button>
-                )}
-            </Toolbar>
-        </AppBar>
+                            Login
+                        </Button>
+                    )}
+                </Toolbar>
+            </AppBar>
+            <SettingsModal
+                open={settingsOpen}
+                onClose={handleCloseSettings}
+            />
+        </>
     );
 };
 

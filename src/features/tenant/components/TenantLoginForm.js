@@ -8,6 +8,8 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
+import LoadingClientAnimation from '../../../components/loading/loading';
+import ErrorAnimation from '../../../components/loading/error';
 
 const TenantLoginForm = () => {
     const { clientId } = useParams();
@@ -26,7 +28,7 @@ const TenantLoginForm = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            navigate(`/tenant/${clientId}`);
+            navigate(`/tenant/${clientId}/port-scan/history`);
         }
     }, [isAuthenticated, navigate, clientId]);
 
@@ -62,7 +64,7 @@ const TenantLoginForm = () => {
             <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%', maxWidth: '400px' }}>
                 {formError && <Alert severity="warning" sx={{ mb: 2 }}>{formError}</Alert>}
                 {authStatus === 'failed' && authError && (
-                    <Alert severity="error" sx={{ mb: 2 }}>{authError}</Alert>
+                    <ErrorAnimation message={authError} />
                 )}
                 <TextField
                     margin="normal"
@@ -100,6 +102,10 @@ const TenantLoginForm = () => {
                     {authStatus === 'loading' ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                 </Button>
             </Box>
+
+            {
+                authStatus === "loading" ? <LoadingClientAnimation message='logging-in' /> : null
+            }
         </Box>
     );
 };
