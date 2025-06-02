@@ -143,13 +143,3 @@ In the project directory, you can run:
 *   `npm run build`: Builds the app for production to the `build` folder.
 *   `npm run eject`: Removes the single dependency (react-scripts) and copies all configuration files and transitive dependencies into your project. **Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-## Contributing
-
-Contributions are welcome! Please follow the standard fork, branch, and pull request workflow. Ensure your code adheres to the project's coding standards.
-
-_(Further details on contributing can be added here, such as specific guidelines or contact information.)_
-
-## License
-
-This project is currently private. 
-_(If you intend to make it public, you should add a license file (e.g., MIT, Apache 2.0) and specify it here.)_
