@@ -20,8 +20,34 @@ Ad-Shield FE is a frontend application designed to provide network security moni
 
 Below are some screenshots showcasing the application's interface and features.
 
-### Tenant Views
 
+### Super Admin Views
+
+**Super Admin Dashboard**
+![Super Admin Dashboard](screenshots/super_admin_dashboard.png)
+*The main dashboard for Super Administrators, providing an overview of the system.*
+
+**User Statistics**
+![Super Admin Check User Stats](screenshots/super_admin_check_user_stats.png)
+*Super Admin view displaying statistics related to user activity.*
+
+**Role Statistics**
+![Super Admin Check Roles Stats](screenshots/super_admin_check_roles_stats.png)
+*Super Admin view displaying statistics related to user roles.*
+
+**IP Lookup Monitoring**
+![Super Admin Check IP Lookup](screenshots/super_admin_check_iplookup.png)
+*Super Admin interface for monitoring IP lookup activities.*
+
+**Client PCAP Analysis Overview**
+![Super Admin Check Client PCAP](screenshots/super_admin_check_client_pcap.png)
+*Super Admin view for overseeing PCAP analysis for clients.*
+
+**Client Port Scan Overview**
+![Super Admin Check Client Port Scan](screenshots/super_admin_check_client_port_scan.png)
+*Super Admin view for overseeing port scanning activities for clients.*
+
+### Tenant Views
 **IP Lookup Table**
 ![Tenant IP Lookup Table](screenshots/tenant_ip_lookup_table.png)
 *Displays a tabular view of IP lookup results for the tenant.*
@@ -62,31 +88,6 @@ Below are some screenshots showcasing the application's interface and features.
 ![Tenant PCAP Network Layer Analysis](screenshots/tenant_pcap_network_layer_analysis.png)
 *Tenant view of PCAP analysis focusing on the network layer.*
 
-### Super Admin Views
-
-**Super Admin Dashboard**
-![Super Admin Dashboard](screenshots/super_admin_dashboard.png)
-*The main dashboard for Super Administrators, providing an overview of the system.*
-
-**User Statistics**
-![Super Admin Check User Stats](screenshots/super_admin_check_user_stats.png)
-*Super Admin view displaying statistics related to user activity.*
-
-**Role Statistics**
-![Super Admin Check Roles Stats](screenshots/super_admin_check_roles_stats.png)
-*Super Admin view displaying statistics related to user roles.*
-
-**IP Lookup Monitoring**
-![Super Admin Check IP Lookup](screenshots/super_admin_check_iplookup.png)
-*Super Admin interface for monitoring IP lookup activities.*
-
-**Client PCAP Analysis Overview**
-![Super Admin Check Client PCAP](screenshots/super_admin_check_client_pcap.png)
-*Super Admin view for overseeing PCAP analysis for clients.*
-
-**Client Port Scan Overview**
-![Super Admin Check Client Port Scan](screenshots/super_admin_check_client_port_scan.png)
-*Super Admin view for overseeing port scanning activities for clients.*
 
 ## Technologies Used
 
